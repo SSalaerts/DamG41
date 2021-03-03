@@ -18,6 +18,7 @@ R = C/2            # longueur de la manivelle obtenue grâce à la longueur de l
 tau = 18           # taux de compression
 beta = 3           # ratio entre la longueur de la bielle et la manivelle
 L = R*beta         # longueur de la bielle que l'on cherche a dimensionner
+gamma = 1.3
 
 m_piston = 0.25 # masse du piston en kg
 m_bielle = 0.35 # masse de la bielle
@@ -32,3 +33,6 @@ dVdtheta = lambda theta : (Vc/2)*(np.sin(theta) + (np.sin(theta)*np.cos(theta))/
 Q_theta = lambda theta, theta_d, theta_comb : (Qtot/2)*(1 - np.cos(np.pi*((theta - theta_d)/theta_comb)))
 dQdtheta = lambda theta, theta_d, theta_comb : (Qtot*np.pi/2*theta_comb)*np.sin(np.pi*(theta-theta_d)/theta_comb)
 
+# Fonction calculant la dérivée par rapport à theta de la pression
+
+dPdtheta = lambda p, theta : -gamma*p*dVdtheta(theta)/V_theta(theta) + (gamma - 1)*dQdtheta(theta, theta_d=0, theta_comb=0)/V_theta(theta)
