@@ -36,3 +36,12 @@ dQdtheta = lambda theta, theta_d, theta_comb : (Qtot*np.pi/2*theta_comb)*np.sin(
 # Fonction calculant la dérivée par rapport à theta de la pression
 
 dPdtheta = lambda p, theta : -gamma*p*dVdtheta(theta)/V_theta(theta) + (gamma - 1)*dQdtheta(theta, theta_d=0, theta_comb=0)/V_theta(theta)
+
+# Euler explicite en fait
+# A vérifier si c'est bien comme implémentation TODO
+
+def eulerExplicite(p, theta):
+    p1 = p + dPdtheta(p, theta)
+    return p1
+
+p = np.zeros(360)
