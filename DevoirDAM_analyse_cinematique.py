@@ -17,13 +17,15 @@ Vc = (3.3E-3)/4    # cylindrée d'un piston
 R = C/2            # longueur de la manivelle obtenue grâce à la longueur de la course
 tau = 18           # taux de compression
 beta = 3           # ratio entre la longueur de la bielle et la manivelle
-L = R*beta         # longueur de la bielle que l'on cherche a dimensionner
+L = R*beta         # longueur de la bielle que l'on cherche à dimensionner
 gamma = 1.3
 
 m_piston = 0.25 # masse du piston en kg
 m_bielle = 0.35 # masse de la bielle
 
-Qtot = 0 # TODO
+Qtot = 165000*((2.5E5)*Vc)/(287.1*303.15) #énergie par kg pour le Diesel * la masse trouvée grâce au premier principe : pV = m*R#*T
+                                          # (pression d'admission de 2.5 bar car presence de turbo, temperature du gaz de 30°C = 303.15 K
+                                          # et R# = 287.1 pour de l'air (néglige le carburant) TODO vérifier que les approx sont légitimes
 
 # Fonctions calculant le volume, la chaleur ainsi que leur dérivée par rapport à theta
 
@@ -38,7 +40,7 @@ dQdtheta = lambda theta, theta_d, theta_comb : (Qtot*np.pi/2*theta_comb)*np.sin(
 dPdtheta = lambda p, theta, theta_d, theta_comb : -gamma*p*dVdtheta(theta)/V_theta(theta) + (gamma - 1)*dQdtheta(theta, theta_d, theta_comb)/V_theta(theta)
 
 # Euler explicite en fait
-# A vérifier si c'est bien comme implémentation TODO
+# A vérifier si c'est bien comme implémentation
 
 def eulerExplicite(P0, theta_d, theta_comb):
 
