@@ -35,7 +35,7 @@ dQdtheta = lambda theta, theta_d, theta_comb : (Qtot*np.pi/2*theta_comb)*np.sin(
 
 # Fonction calculant la dérivée par rapport à theta de la pression
 
-dPdtheta = lambda p, theta : -gamma*p*dVdtheta(theta)/V_theta(theta) + (gamma - 1)*dQdtheta(theta, theta_d=0, theta_comb=0)/V_theta(theta)
+dPdtheta = lambda p, theta, theta_d, theta_comb : -gamma*p*dVdtheta(theta)/V_theta(theta) + (gamma - 1)*dQdtheta(theta, theta_d, theta_comb)/V_theta(theta)
 
 # Euler explicite en fait
 # A vérifier si c'est bien comme implémentation TODO
@@ -46,8 +46,8 @@ def eulerExplicite(P0, theta_d, theta_comb):
     P[0] = P0
 
     for theta in range(360):
-        P[theta+1] = P[theta] + dPdtheta(P[theta], theta)
-        if(theta_d == theta_comb): # TODO les conditions sont pas bonnes encore
+        P[theta+1] = P[theta] + dPdtheta(P[theta], theta, theta_d, theta_comb)
+        if(theta_d == theta_comb): # TODO les conditions sont pas bonnes encore fin ça dépends de la définition de la fonction donc maybe ya pas besoin
             pass
         else:
             pass
