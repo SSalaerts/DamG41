@@ -40,8 +40,16 @@ dPdtheta = lambda p, theta : -gamma*p*dVdtheta(theta)/V_theta(theta) + (gamma - 
 # Euler explicite en fait
 # A vérifier si c'est bien comme implémentation TODO
 
-def eulerExplicite(p, theta):
-    p1 = p + dPdtheta(p, theta)
-    return p1
+def eulerExplicite(P0, theta_d, theta_comb):
 
-p = np.zeros(360)
+    P = np.zeros(360)
+    P[0] = P0
+
+    for theta in range(360):
+        P[theta+1] = P[theta] + dPdtheta(P[theta], theta)
+        if(theta_d == theta_comb): # TODO les conditions sont pas bonnes encore
+            pass
+        else:
+            pass
+
+    return P
