@@ -28,8 +28,7 @@ V_theta = lambda theta : (Vc/2)*(1 - np.cos(theta) + beta - np.sqrt(beta*beta - 
 dVdtheta = lambda theta : (Vc/2)*(np.sin(theta) + (np.sin(theta)*np.cos(theta))/np.sqrt(beta*beta - np.sin(theta)**2))
 
 Q_theta = lambda Qtot, theta, thetaC, deltaThetaC : (Qtot / 2) * (1 - np.cos(np.pi * ((theta - thetaC) / deltaThetaC)))
-dQdtheta = lambda Qtot, theta, thetaC, deltaThetaC : (Qtot*np.pi/2*deltaThetaC)*np.sin(np.pi*(theta-thetaC)/deltaThetaC)
-
+dQdtheta = lambda Qtot, theta, thetaC, deltaThetaC : (Qtot*np.pi)*np.sin(np.pi*(theta - thetaC)/deltaThetaC)/(2*deltaThetaC)
 
 # Fonction calculant la dérivée par rapport à theta de la pression
 def myfunc(rpm, s, theta, thetaC, deltaThetaC):
@@ -52,7 +51,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     Fcrit = 0
 
     V_output = V_theta(thetaRadian)
-    Q_output = Q_theta(Qtot, thetaRadian, thetaCRadian, deltaThetaCRadian)
+    Q_output = Q_theta(Qtot, thetaRadian, thetaCRadian, deltaThetaCRadian)    # TODO Q_output est débile pour le moment
 
     dV = dVdtheta(thetaRadian)
     dQ = dQdtheta(Qtot, thetaRadian, thetaCRadian, deltaThetaCRadian)
@@ -97,28 +96,28 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 
     roots = np.roots([-1, 0, -b, 0, a])
 
-    t = np.real((np.amax(roots)))
+    t = np.amax(np.real(roots))
 
     return (V_output, Q_output, F_pied_output, F_tete_output, p_output, t)
 
 
 rpm = 3000
-s = 2.5
+s = 1.8
 theta = np.arange(-180, 181)
-thetaC = 40
+thetaC = 35
 deltaThetaC = 70
 
 V_output, Q_output, F_pied_output, F_tete_output, p_output, t = myfunc(rpm, s, theta, thetaC, deltaThetaC)
 
 
 def beauPlot():
-    # plt.figure()
-    # plt.plot(theta, V_output)
-    # plt.title("Volume par rapport a theta en [m^3]")
+    plt.figure()
+    plt.plot(theta, V_output)
+    plt.title("Volume par rapport a theta en [m^3]")
 
-    # plt.figure()
-    # plt.plot(theta, Q_output)
-    # plt.title("Chaleur par rapport a theta en [J]")
+    plt.figure()
+    plt.plot(theta, Q_output)
+    plt.title("Chaleur par rapport a theta en [J]")
 
     plt.figure()
     plt.plot(theta, F_pied_output, label="F_pied")
