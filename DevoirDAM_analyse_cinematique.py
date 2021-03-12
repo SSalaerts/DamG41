@@ -83,8 +83,8 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
             if(Fcrit < F_compression):
                 Fcrit = F_compression
 
-    
-    """Calcul de t """ #TODO ça pue encore du cul, on a 2.67e17 m de section, c'est beaucoup trop
+
+    """Calcul de t """ #TODO ça pue encore du cul, on a 2.67e17 m de section, c'est beaucoup trop, aussi j'ai pas fait dans le sens perpendiculaire au mouvemement
     sigma = 450e6   # résistance de compression 450 MPa
     E = 200e9       # module d'élasticité 200 GPa
     Kx = 1          # facteur de correction dans le plan du mouvement
@@ -112,7 +112,7 @@ deltaThetaC = 70
 V_output, Q_output, F_pied_output, F_tete_output, p_output, t = myfunc(rpm, s, theta, thetaC, deltaThetaC)
 
 
-def beauplot():
+def beauPlot():
     plt.figure()
     plt.plot(theta, V_output)
     plt.title("Volume par rapport a theta en [m^3]")
@@ -135,4 +135,5 @@ def beauplot():
 
     plt.show()
 
-beauplot()
+
+beauPlot()
