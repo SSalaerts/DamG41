@@ -51,12 +51,14 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     Fcrit = 0
 
     V_output = V_theta(thetaRadian)
-    Q_output = Q_theta(Qtot, thetaRadian, thetaCRadian, deltaThetaCRadian)    # TODO Q_output est débile pour le moment
+    Q_output = Q_theta(Qtot, thetaRadian, thetaCRadian, deltaThetaCRadian) # TODO Q_output et dQ sont débiles pour le moment
+    Q_output[:180 + thetaC:] = 0
+    Q_output[180 + thetaC + deltaThetaC::] = 0
 
     dV = dVdtheta(thetaRadian)
     dQ = dQdtheta(Qtot, thetaRadian, thetaCRadian, deltaThetaCRadian)
-    dQ[dQ < 180 + thetaC] = 0
-    dQ[dQ > 180 + thetaC + deltaThetaC] = 0
+    dQ[:180 + thetaC:] = 0
+    dQ[:180 + thetaC + deltaThetaC:] = 0
 
     dPdtheta = lambda p, i: (-gamma * p * dV[i] + (gamma - 1) * dQ[i])/V_output[i]
 
