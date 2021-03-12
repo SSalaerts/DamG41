@@ -80,19 +80,20 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 
         if(F_pied >= 0 and F_tete <= 0):
             F_compression = min(F_pied, -F_tete)
-            if(Fcrit > F_compression):
+            if(Fcrit < F_compression):
                 Fcrit = F_compression
 
-    """Calcul de t"""
+    
+    """Calcul de t """ #TODO ça pue encore du cul, on a 2.67e17 m de section, c'est beaucoup trop
     sigma = 450e6   # résistance de compression 450 MPa
     E = 200e9       # module d'élasticité 200 GPa
     Kx = 1          # facteur de correction dans le plan du mouvement
 
     coeffEuler = (419*np.pi*np.pi*E)/(12*Kx*Kx*L*L)
-    a = 11*coeffEuler
-    b = coeffEuler
-    c = 11*Fcrit
-    racineDelta = np.sqrt(b*b - 4*a*c)
+    a = coeffEuler/Fcrit
+    b = coeffEuler/11*sigma
+
+    racineDelta = np.sqrt(b*b + 4*a)
 
     t1 = np.sqrt((b - racineDelta)/2*a)
     t2 = np.sqrt((b + racineDelta)/2*a)
@@ -102,7 +103,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     return (V_output, Q_output, F_pied_output, F_tete_output, p_output, t)
 
 
-rpm = 2500
+rpm = 3000
 s = 1
 theta = np.arange(-180, 181)
 thetaC = 40
@@ -110,19 +111,28 @@ deltaThetaC = 70
 
 V_output, Q_output, F_pied_output, F_tete_output, p_output, t = myfunc(rpm, s, theta, thetaC, deltaThetaC)
 
-plt.figure()
-plt.plot(theta, V_output, label="Volume par rapport a theta")
-plt.legend()
 
-plt.figure()
-plt.plot(theta, Q_output, label="Chaleur par rapport a theta")
-plt.legend()
-plt.figure()
-plt.plot(theta, F_pied_output, label="Force sur le pied de vilebrequin")
-plt.plot(theta, F_tete_output, label="Force sur la tete du vilebrequin")
-plt.legend()
-plt.figure()
-plt.plot(theta, p_output, label="Pression en bar par rapport a theta")
-print("la section t du vilebrequin vaut: ", t)
-plt.legend()
-plt.show()
+def beauplot():
+    plt.figure()
+    plt.plot(theta, V_output)
+    plt.title("Volume par rapport a theta en [m^3]")
+
+    plt.figure()
+    plt.plot(theta, Q_output)
+    plt.title("Chaleur par rapport a theta en [J]")
+
+    plt.figure()
+    plt.plot(theta, F_pied_output, label="F_pied")
+    plt.plot(theta, F_tete_output, label="F_tete")
+    plt.title("Force sur le pied et la tete de bielle en [J]")
+    plt.legend()
+
+    plt.figure()
+    plt.plot(theta, p_output)
+    plt.title("Pression en bar par rapport a theta en [Pa]")
+
+    print("la section t de la bielle vaut: {} en [m]".format(t))
+
+    plt.show()
+
+beauplot()
