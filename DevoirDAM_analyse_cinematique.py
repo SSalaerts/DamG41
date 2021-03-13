@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
 """
 Analyse cinématique et dynamique en vue de dimensionner la section d'une bielle.
 
@@ -20,20 +21,19 @@ L = R*beta         # longueur de la bielle que l'on cherche à dimensionner
 mpiston = 0.25     # masse du piston en kg
 mbielle = 0.35     # masse de la bielle en kg
 Q = 1650e3         # valeur chaleur emise par fuel par kg de melange admis (Diesel) en J
-Vc = 3.3e-3/4    # cylindrée d'un piston
+Vc = 3.3e-3/4      # cylindrée d'un piston
 
 # Fonctions calculant le volume, la chaleur ainsi que leur dérivée par rapport à theta
 
 V_theta = lambda theta : (Vc/2)*(1 - np.cos(theta) + beta - np.sqrt(beta*beta - np.sin(theta)**2)) + Vc/(tau - 1)
 dVdtheta = lambda theta : (Vc/2)*(np.sin(theta) + (np.sin(theta)*np.cos(theta))/np.sqrt(beta*beta - np.sin(theta)**2))
 
-Q_theta = lambda Qtot, theta, thetaC, deltaThetaC : (Qtot / 2) * (1 - np.cos(np.pi * ((theta - thetaC) / deltaThetaC)))
-dQdtheta = lambda Qtot, theta, thetaC, deltaThetaC : (Qtot*np.pi)*np.sin(np.pi*(theta - thetaC)/deltaThetaC)/(2*deltaThetaC)
+Q_theta = lambda Qtot, theta, thetaC, deltaThetaC : (Qtot / 2) * (1 - np.cos(np.pi * ((theta + thetaC) / deltaThetaC)))
+dQdtheta = lambda Qtot, theta, thetaC, deltaThetaC : (Qtot*np.pi)*np.sin(np.pi*(theta + thetaC)/deltaThetaC)/(2*deltaThetaC)
 
-# Fonction calculant la dérivée par rapport à theta de la pression
 def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 
-    DegtoRad = 2*np.pi/360 # qui est aussi l'écart entre deux éléments du tableau thetaRadian
+    DegtoRad = 2*np.pi/360                    # qui est aussi l'écart entre deux éléments du tableau thetaRadian
     thetaRadian = theta*DegtoRad
     thetaCRadian = thetaC*DegtoRad
     deltaThetaCRadian = deltaThetaC*DegtoRad
@@ -51,14 +51,11 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     Fcrit = 0
 
     V_output = V_theta(thetaRadian)
-    Q_output = Q_theta(Qtot, thetaRadian, thetaCRadian, deltaThetaCRadian) # TODO Q_output et dQ sont débiles pour le moment
-    Q_output[:180 + thetaC:] = 0
-    Q_output[180 + thetaC + deltaThetaC::] = 0
 
     dV = dVdtheta(thetaRadian)
     dQ = dQdtheta(Qtot, thetaRadian, thetaCRadian, deltaThetaCRadian)
-    dQ[:180 + thetaC:] = 0
-    dQ[:180 + thetaC + deltaThetaC:] = 0
+    dQ[:180 - thetaC:] = 0
+    dQ[180 - thetaC + deltaThetaC:] = 0
 
     dPdtheta = lambda p, i: (-gamma * p * dV[i] + (gamma - 1) * dQ[i])/V_output[i]
 
@@ -75,32 +72,42 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
         F_tete_output[i] = -pression + (mpiston + mbielle)*acceleration
 
     """Calcul de la force critique"""
-
     for i in range(size):
         F_pied = F_pied_output[i]
         F_tete = F_tete_output[i]
 
-        if(F_pied >= 0 and F_tete <= 0):
+        if(F_pied >= 0 >= F_tete): # TODO à revérifier avec 2 forces positives
             F_compression = min(F_pied, -F_tete)
             if(Fcrit < F_compression):
                 Fcrit = F_compression
 
     print("Force critique {} [N], ps je suis dans myfunc()".format(Fcrit))
 
-    """Calcul de t """ #TODO ça pue encore du cul, on a 6e-7 m de section, c'est beaucoup trop peu, aussi j'ai pas fait dans le sens perpendiculaire au mouvemement
+    """Calcul de t """ # TODO ça pue encore du cul, on a 6e-7 m de section, c'est beaucoup trop peu, aussi j'ai pas fait dans le sens perpendiculaire au mouvemement
     sigma = 450e6   # résistance de compression 450 MPa
     E = 200e9       # module d'élasticité 200 GPa
     Kx = 1          # facteur de correction dans le plan du mouvement
+    Ky = 0.5        # facteur de correction dans le plan perpendiculaire au mouvemement
 
-    coeffEuler = (419*np.pi*np.pi*E)/(12*Kx*Kx*L*L)
-    a = coeffEuler/Fcrit
-    b = coeffEuler/11*sigma
+    coeffEulerX = (419*np.pi*np.pi*E)/(12*Kx*Kx*L*L)
+    ax = coeffEulerX/Fcrit
+    bx = coeffEulerX/11*sigma
 
-    roots = np.roots([-1, 0, -b, 0, a])
+    rootsX = np.roots([-1, 0, -bx, 0, ax])
 
-    t = np.amax(np.real(roots))
+    tx = np.amax(np.real(rootsX))
 
-    return (V_output, Q_output, F_pied_output, F_tete_output, p_output, t)
+    coeffEulerY = (419 * np.pi * np.pi * E) / (12 * Ky * Ky * L * L)
+    ay = coeffEulerY / Fcrit
+    by = coeffEulerY / 11 * sigma
+
+    rootsY = np.roots([-1, 0, -by, 0, ay])
+
+    ty = np.amax(np.real(rootsY))
+
+    t = max(tx, ty)
+
+    return (V_output, dQ, F_pied_output, F_tete_output, p_output, t)
 
 
 rpm = 3000
@@ -119,7 +126,7 @@ def beauPlot():
 
     plt.figure()
     plt.plot(theta, Q_output)
-    plt.title("Chaleur par rapport a theta en [J]")
+    plt.title("Ajout de chaleur par rapport a theta en [J]")
 
     plt.figure()
     plt.plot(theta, F_pied_output, label="F_pied")
