@@ -85,7 +85,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 
     print("Force critique {} [N], ps je suis dans myfunc()".format(Fcrit))
 
-    """Calcul de t """ # TODO ça pue encore du cul, on a 6e-7 m de section, c'est beaucoup trop peu, aussi j'ai pas fait dans le sens perpendiculaire au mouvemement
+    """Calcul de t """ # TODO ça pue encore du cul
     sigma = 450e6   # résistance de compression 450 MPa
     E = 200e9       # module d'élasticité 200 GPa
     Kx = 1          # facteur de correction dans le plan du mouvement
@@ -97,25 +97,22 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 
     ax = coeffEuler*Ixx/(Fcrit*Kx*Kx)
     bx = -coeffEuler*Ixx/(11*sigma*Kx*Kx)
-    tx = np.roots([-1, 0, bx, 0, ax])
+    tx = np.roots([ax, 0, bx, -1])
 
     ay = coeffEuler*Iyy/(Fcrit*Ky*Ky)
     by = -coeffEuler*Iyy/(11*sigma*Ky*Ky)
-    ty = np.roots([-1, 0, by, 0, ay])
-
-    print("tx = ", tx)
-    print("ty = ", ty)
+    ty = np.roots([ay, 0, by, 0, -1])
 
     t = max(max(np.real(tx)), max(np.real(ty)))
 
     return (V_output, dQ, F_pied_output, F_tete_output, p_output, t)
 
 
-rpm = 3000
+rpm = 1500
 s = 1.8
 theta = np.arange(-180, 181)
 thetaC = 35
-deltaThetaC = 70
+deltaThetaC = 41
 
 V_output, Q_output, F_pied_output, F_tete_output, p_output, t = myfunc(rpm, s, theta, thetaC, deltaThetaC)
 
@@ -147,29 +144,4 @@ def beauxPlots():
 
     plt.show()
 
-
-def beauPlot():
-    """
-    fonction débile car les échelles ne sont pas compatibles
-    :return:
-    """
-    plt.figure()
-    plt.plot(theta, V_output, label="Volume par rapport a theta en [m^3]")
-
-    plt.plot(theta, Q_output, label="Ajout de chaleur par rapport a theta en [J]")
-
-    plt.plot(theta, F_pied_output, label="F_pied en [N]")
-    plt.plot(theta, F_tete_output, label="F_tete en [N]")
-
-    plt.plot(theta, p_output/1e5, label="Pression en bar par rapport a theta en [bar]")
-
-    plt.title("Tous les beaux graphes en 1")
-    plt.legend()
-
-    print("la section t de la bielle vaut: {} [m]".format(t))
-
-    plt.show()
-
-
-# beauPlot()
 beauxPlots()
