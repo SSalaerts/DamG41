@@ -23,28 +23,37 @@ mbielle = 0.35     # masse de la bielle en kg
 Q = 1650e3         # valeur chaleur emise par fuel par kg de melange admis (Diesel) en J
 Vc = 3.3e-3/4      # cylindrée d'un piston
 
-# Fonctions calculant le volume, la chaleur ainsi que leur dérivée par rapport à theta
 
 def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     """
     Fonction calculant pour un moteur Diesel 4 cylindres l'épaisseur critique t de la bielle
     afin qu'elle résiste au flambage
 
-    Arguments
-    ---------
-    rpm: nombre de tours par minute du moteur
-    s: taux de suralimentation
-    theta: angle de rotation sous forme de numpy array de -180 degrés à 180 degrés
-    thetaC: angle d'allumage en degré d'angle de vilebrequin avant le PMH
-    deltaThetaC: durée de combustion en degrés d'angle de vilebrequin
+        Parameters:
+        -----------
+            rpm: nombre de tours par minute du moteur
 
-    Retourne:
-    ---------
-    V_output en [m^3]: l'évolution du volume du cylindre en fonction de l'angle de rotation theta
-    Q_output en [J]: l'évolution de l'apport de chaleur en fonction de l'angle de rotation theta
-    F_pied_output et F_tete_output en [N]: l'évolution des différentes forces s'appliquant sur la bielle
-    p_output en [Pa]: l'évolution de la pression dans le cylindre en fonction de l'angle de rotaion theta
-    t en [m]: l'épaisseur critique de la bielle en forme de I
+            s: taux de suralimentation
+
+            theta: angle de rotation sous forme de numpy array de -180 degrés à 180 degrés
+
+            thetaC: angle d'allumage en degré d'angle de vilebrequin avant le PMH
+
+            deltaThetaC: durée de combustion en degrés d'angle de vilebrequin
+
+        Returns:
+        -----------
+            V_output: l'évolution du volume en [m^3] du cylindre en fonction de l'angle de rotation theta
+
+            Q_output: l'évolution de l'apport de chaleur en [J] en fonction de l'angle de rotation theta
+
+            F_pied_output: l'évolution de la force en [N] s'appliquant sur le pied de bielle
+
+            F_tete_output: l'évolution de la force en [N] s'appliquant sur la tete de bielle
+
+            p_output: l'évolution de la pression en [Pa] dans le cylindre en fonction de l'angle de rotaion theta
+
+            t: l'épaisseur critique en [m] de la bielle en forme de I
     """
 
     """Fonctions calculant le volume et sa dérivée par rapport à theta pour un angle theta donné"""
