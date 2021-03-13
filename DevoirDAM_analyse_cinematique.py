@@ -25,20 +25,41 @@ Vc = 3.3e-3/4      # cylindrée d'un piston
 
 # Fonctions calculant le volume, la chaleur ainsi que leur dérivée par rapport à theta
 
-V_theta = lambda theta : (Vc/2)*(1 - np.cos(theta) + beta - np.sqrt(beta*beta - np.sin(theta)**2)) + Vc/(tau - 1)
-dVdtheta = lambda theta : (Vc/2)*(np.sin(theta) + (np.sin(theta)*np.cos(theta))/np.sqrt(beta*beta - np.sin(theta)**2))
-
-dQdtheta = lambda Qtot, theta, thetaC, deltaThetaC : (Qtot*np.pi)*np.sin(np.pi*(theta - thetaC)/deltaThetaC)/(2*deltaThetaC)
-
 def myfunc(rpm, s, theta, thetaC, deltaThetaC):
+    """
+    Fonction calculant pour un moteur Diesel 4 cylindres l'épaisseur critique t de la bielle
+    afin qu'elle résiste au flambage
 
-    DegtoRad = 2*np.pi/360                    # qui est aussi l'écart entre deux éléments du tableau thetaRadian
+    Arguments
+    ---------
+    rpm: nombre de tours par minute du moteur
+    s: taux de suralimentation
+    theta: angle de rotation sous forme de numpy array de -180 degrés à 180 degrés
+    thetaC: angle d'allumage en degré d'angle de vilebrequin avant le PMH
+    deltaThetaC: durée de combustion en degrés d'angle de vilebrequin
+
+    Retourne:
+    ---------
+    V_output en [m^3]: l'évolution du volume du cylindre en fonction de l'angle de rotation theta
+    Q_output en [J]: l'évolution de l'apport de chaleur en fonction de l'angle de rotation theta
+    F_pied_output et F_tete_output en [N]: l'évolution des différentes forces s'appliquant sur la bielle
+    p_output en [Pa]: l'évolution de la pression dans le cylindre en fonction de l'angle de rotaion theta
+    t en [m]: l'épaisseur critique de la bielle en forme de I
+    """
+
+    """Fonctions calculant le volume et sa dérivée par rapport à theta pour un angle theta donné"""
+    V_theta = lambda theta: (Vc/2) * (1 - np.cos(theta) + beta - np.sqrt(beta*beta - np.sin(theta)**2)) + Vc/(tau-1)
+    dVdtheta = lambda theta: (Vc/2) * (np.sin(theta) + (np.sin(theta)*np.cos(theta))/np.sqrt(beta*beta - np.sin(theta)**2))
+
+    """Passage de degré en radian pour tous les paramètres le nécessitant"""
+    DegtoRad = 2*np.pi/360
     thetaRadian = theta*DegtoRad
     thetaCRadian = thetaC*DegtoRad
     deltaThetaCRadian = deltaThetaC*DegtoRad
 
     size = theta.size
 
+    """Détermination des constantes"""
     omega = rpm*2*np.pi/60
     p_admission = s*1e5
     Qtot = Q * (p_admission * Vc) / (287.1 * 303.15)
@@ -47,21 +68,24 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     p_output = np.zeros(size)
     F_pied_output = np.zeros(size)
     F_tete_output = np.zeros(size)
-    Fcrit = 0
 
     V_output = V_theta(thetaRadian)
-
     dV = dVdtheta(thetaRadian)
-    dQ = dQdtheta(Qtot, thetaRadian, -thetaCRadian, deltaThetaCRadian)              # -thetaCRadian car thetaC est défini comme de la bite
-    dQ[:180 - thetaC:] = 0                                                          # Apport de chaleur uniquement entre thetaC et thetaC + deltaThetaC, donc on mets à 0 les autres valeurs
-    dQ[180 - thetaC + deltaThetaC:] = 0
 
-    dPdtheta = lambda p, i: (-gamma * p * dV[i] + (gamma - 1) * dQ[i])/V_output[i]
+    """Fonction calculant l'apport de chaleur par rapport à theta"""
+    dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * np.pi) * np.sin(
+        np.pi * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
+
+    Q_output = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
+    Q_output[:180 - thetaC:] = 0                          # Apport de chaleur uniquement entre thetaC et thetaC + deltaThetaC
+    Q_output[180 - thetaC + deltaThetaC:] = 0
+
+    dPdtheta = lambda i: (-gamma * p_output[i] * dV[i] + (gamma - 1) * Q_output[i])/V_output[i]
 
     """Calcul de p par Euler explicite"""
     p_output[0] = p_admission
     for i in range(size - 1):
-        p_output[i + 1] = p_output[i] + DegtoRad*dPdtheta(p_output[i], i)
+        p_output[i + 1] = p_output[i] + DegtoRad*dPdtheta(i)
 
     """Calcul de F_pied_output et F_tete_output"""
     for i in range(size):
@@ -70,22 +94,11 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
         F_pied_output[i] = pression - mpiston*acceleration
         F_tete_output[i] = -pression + (mpiston + mbielle)*acceleration
 
-    """Calcul de la force critique"""
+    """Détermination de la force critique"""
     Fmin = np.minimum(-F_tete_output, F_pied_output)
     Fcrit = np.max(Fmin)
 
-    # for i in range(size):                 Ce qu'il y a au dessus c'est l'équivalent de ce qu'il y a en commentaire ici
-    #     F_pied = F_pied_output[i]
-    #     F_tete = F_tete_output[i]
-    #
-    #     if(F_pied >= 0 >= F_tete):
-    #         F_compression = min(F_pied, -F_tete)
-    #         if(Fcrit < F_compression):
-    #             Fcrit = F_compression
-
-    print("Force critique {} [N], ps je suis dans myfunc()".format(Fcrit))
-
-    """Calcul de t """ # TODO ça pue encore du cul
+    """Calcul de t"""
     sigma = 450e6   # résistance de compression 450 MPa
     E = 200e9       # module d'élasticité 200 GPa
     Kx = 1          # facteur de correction dans le plan du mouvement
@@ -105,7 +118,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 
     t = max(max(np.real(tx)), max(np.real(ty)))
 
-    return (V_output, dQ, F_pied_output, F_tete_output, p_output, t)
+    return (V_output, Q_output, F_pied_output, F_tete_output, p_output, t)
 
 
 rpm = 1500
@@ -118,10 +131,7 @@ V_output, Q_output, F_pied_output, F_tete_output, p_output, t = myfunc(rpm, s, t
 
 
 def beauxPlots():
-    """
-    beaux plots :)
-    :return:
-    """
+
     plt.figure()
     plt.plot(theta, V_output)
     plt.title("Volume par rapport a theta en [m^3]")
@@ -143,5 +153,6 @@ def beauxPlots():
     print("la section t de la bielle vaut: {} [m]".format(t))
 
     plt.show()
+
 
 beauxPlots()
