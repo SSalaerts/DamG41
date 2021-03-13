@@ -71,14 +71,17 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
         F_tete_output[i] = -pression + (mpiston + mbielle)*acceleration
 
     """Calcul de la force critique"""
-    for i in range(size):
-        F_pied = F_pied_output[i]
-        F_tete = F_tete_output[i]
+    Fmin = np.minimum(-F_tete_output, F_pied_output)
+    Fcrit = np.max(Fmin)
 
-        if(F_pied >= 0 >= F_tete):
-            F_compression = min(F_pied, -F_tete)
-            if(Fcrit < F_compression):
-                Fcrit = F_compression
+    # for i in range(size):                 Ce qu'il y a au dessus c'est l'équivalent de ce qu'il y a en commentaire ici
+    #     F_pied = F_pied_output[i]
+    #     F_tete = F_tete_output[i]
+    #
+    #     if(F_pied >= 0 >= F_tete):
+    #         F_compression = min(F_pied, -F_tete)
+    #         if(Fcrit < F_compression):
+    #             Fcrit = F_compression
 
     print("Force critique {} [N], ps je suis dans myfunc()".format(Fcrit))
 
