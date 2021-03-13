@@ -28,8 +28,7 @@ Vc = 3.3e-3/4      # cylindrée d'un piston
 V_theta = lambda theta : (Vc/2)*(1 - np.cos(theta) + beta - np.sqrt(beta*beta - np.sin(theta)**2)) + Vc/(tau - 1)
 dVdtheta = lambda theta : (Vc/2)*(np.sin(theta) + (np.sin(theta)*np.cos(theta))/np.sqrt(beta*beta - np.sin(theta)**2))
 
-Q_theta = lambda Qtot, theta, thetaC, deltaThetaC : (Qtot / 2) * (1 - np.cos(np.pi * ((theta + thetaC) / deltaThetaC)))
-dQdtheta = lambda Qtot, theta, thetaC, deltaThetaC : (Qtot*np.pi)*np.sin(np.pi*(theta + thetaC)/deltaThetaC)/(2*deltaThetaC)
+dQdtheta = lambda Qtot, theta, thetaC, deltaThetaC : (Qtot*np.pi)*np.sin(np.pi*(theta - thetaC)/deltaThetaC)/(2*deltaThetaC)
 
 def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 
@@ -53,8 +52,8 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     V_output = V_theta(thetaRadian)
 
     dV = dVdtheta(thetaRadian)
-    dQ = dQdtheta(Qtot, thetaRadian, thetaCRadian, deltaThetaCRadian)
-    dQ[:180 - thetaC:] = 0
+    dQ = dQdtheta(Qtot, thetaRadian, -thetaCRadian, deltaThetaCRadian)              # -thetaCRadian car thetaC est défini comme de la bite
+    dQ[:180 - thetaC:] = 0                                                          # Apport de chaleur uniquement entre thetaC et thetaC + deltaThetaC, donc on mets à 0 les autres valeurs
     dQ[180 - thetaC + deltaThetaC:] = 0
 
     dPdtheta = lambda p, i: (-gamma * p * dV[i] + (gamma - 1) * dQ[i])/V_output[i]
@@ -76,7 +75,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
         F_pied = F_pied_output[i]
         F_tete = F_tete_output[i]
 
-        if(F_pied >= 0 >= F_tete): # TODO à revérifier avec 2 forces positives
+        if(F_pied >= 0 >= F_tete):
             F_compression = min(F_pied, -F_tete)
             if(Fcrit < F_compression):
                 Fcrit = F_compression
@@ -97,7 +96,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 
     tx = np.amax(np.real(rootsX))
 
-    coeffEulerY = (419 * np.pi * np.pi * E) / (12 * Ky * Ky * L * L)
+    coeffEulerY = (131 * np.pi * np.pi * E) / (12 * Ky * Ky * L * L)
     ay = coeffEulerY / Fcrit
     by = coeffEulerY / 11 * sigma
 
@@ -105,7 +104,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 
     ty = np.amax(np.real(rootsY))
 
-    t = max(tx, ty)
+    t = 0
 
     return (V_output, dQ, F_pied_output, F_tete_output, p_output, t)
 
@@ -119,7 +118,11 @@ deltaThetaC = 70
 V_output, Q_output, F_pied_output, F_tete_output, p_output, t = myfunc(rpm, s, theta, thetaC, deltaThetaC)
 
 
-def beauPlot():
+def beauxPlots():
+    """
+    beaux plots :)
+    :return:
+    """
     plt.figure()
     plt.plot(theta, V_output)
     plt.title("Volume par rapport a theta en [m^3]")
@@ -143,4 +146,28 @@ def beauPlot():
     plt.show()
 
 
-beauPlot()
+def beauPlot():
+    """
+    fonction débile car les échelles ne sont pas compatibles
+    :return:
+    """
+    plt.figure()
+    plt.plot(theta, V_output, label="Volume par rapport a theta en [m^3]")
+
+    plt.plot(theta, Q_output, label="Ajout de chaleur par rapport a theta en [J]")
+
+    plt.plot(theta, F_pied_output, label="F_pied en [N]")
+    plt.plot(theta, F_tete_output, label="F_tete en [N]")
+
+    plt.plot(theta, p_output/1e5, label="Pression en bar par rapport a theta en [bar]")
+
+    plt.title("Tous les beaux graphes en 1")
+    plt.legend()
+
+    print("la section t de la bielle vaut: {} [m]".format(t))
+
+    plt.show()
+
+
+# beauPlot()
+beauxPlots()
