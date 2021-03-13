@@ -90,24 +90,23 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     E = 200e9       # module d'élasticité 200 GPa
     Kx = 1          # facteur de correction dans le plan du mouvement
     Ky = 0.5        # facteur de correction dans le plan perpendiculaire au mouvemement
+    Ixx = 419/12
+    Iyy = 131/12
 
-    coeffEulerX = (419*np.pi*np.pi*E)/(12*Kx*Kx*L*L)
-    ax = coeffEulerX/Fcrit
-    bx = coeffEulerX/11*sigma
+    coeffEuler = (np.pi*np.pi*E)/(L*L)
 
-    rootsX = np.roots([-1, 0, -bx, 0, ax])
+    ax = coeffEuler*Ixx/(Fcrit*Kx*Kx)
+    bx = -coeffEuler*Ixx/(11*sigma*Kx*Kx)
+    tx = np.roots([-1, 0, bx, 0, ax])
 
-    tx = np.amax(np.real(rootsX))
+    ay = coeffEuler*Iyy/(Fcrit*Ky*Ky)
+    by = -coeffEuler*Iyy/(11*sigma*Ky*Ky)
+    ty = np.roots([-1, 0, by, 0, ay])
 
-    coeffEulerY = (131 * np.pi * np.pi * E) / (12 * Ky * Ky * L * L)
-    ay = coeffEulerY / Fcrit
-    by = coeffEulerY / 11 * sigma
+    print("tx = ", tx)
+    print("ty = ", ty)
 
-    rootsY = np.roots([-1, 0, -by, 0, ay])
-
-    ty = np.amax(np.real(rootsY))
-
-    t = 0
+    t = max(max(np.real(tx)), max(np.real(ty)))
 
     return (V_output, dQ, F_pied_output, F_tete_output, p_output, t)
 
