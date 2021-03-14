@@ -66,18 +66,14 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     thetaCRadian = thetaC*DegtoRad
     deltaThetaCRadian = deltaThetaC*DegtoRad
 
-    size = theta.size
-
     """Détermination des constantes"""
+    size = theta.size
     omega = rpm*2*np.pi/60
     p_admission = s*1e5
     Qtot = Q * (p_admission * Vc) / (287.1 * 303.15)
     gamma = 1.3
 
-    p_output = np.zeros(size)
-    F_pied_output = np.zeros(size)
-    F_tete_output = np.zeros(size)
-
+    """Calcul de V_output et de la variation de volume par rapport à theta"""
     V_output = V_theta(thetaRadian)
     dV = dVdtheta(thetaRadian)
 
@@ -86,12 +82,12 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
         np.pi * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
 
     Q_output = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
-    Q_output[:180 - thetaC:] = 0                          # Apport de chaleur uniquement entre thetaC et thetaC + deltaThetaC
+    Q_output[:180 - thetaC] = 0                          # Apport de chaleur uniquement entre thetaC et thetaC + deltaThetaC
     Q_output[180 - thetaC + deltaThetaC:] = 0
 
-    dPdtheta = lambda i: (-gamma * p_output[i] * dV[i] + (gamma - 1) * Q_output[i])/V_output[i]
-
     """Calcul de p par Euler explicite"""
+    p_output = np.zeros(size)
+    dPdtheta = lambda i: (-gamma * p_output[i] * dV[i] + (gamma - 1) * Q_output[i])/V_output[i]
     p_output[0] = p_admission
     for i in range(size - 1):
         p_output[i + 1] = p_output[i] + DegtoRad*dPdtheta(i)
