@@ -97,22 +97,22 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
         p_output[i + 1] = p_output[i] + DegtoRad*dPdtheta(i)
 
     """Calcul de F_pied_output et F_tete_output"""
-    pression = (np.pi*D*D/4)*p_output
+    F_pression = (np.pi*D*D/4)*p_output
     acceleration = R*omega*omega*np.cos(thetaRadian)
-    F_pied_output = pression - mpiston*acceleration
-    F_tete_output = -pression + (mpiston + mbielle)*acceleration
+    F_pied_output = F_pression - mpiston*acceleration
+    F_tete_output = -F_pression + (mpiston + mbielle)*acceleration
 
     """Détermination de la force critique"""
     Fcompression = np.minimum(-F_tete_output, F_pied_output)
     Fcrit = np.max(Fcompression)
 
     """Calcul de t"""
-    sigma = 450e6   # résistance de compression 450 MPa
-    E = 200e9       # module d'élasticité 200 GPa
+    sigma = 450e6   # résistance de compression à 450 MPa
+    E = 200e9       # module d'élasticité à 200 GPa
     Kx = 1          # facteur de correction dans le plan du mouvement (axe x)
     Ky = 0.5        # facteur de correction dans le plan perpendiculaire au mouvemement (axe y)
-    Ixx = 419/12    # moment d'inertie dans l'axe x
-    Iyy = 131/12    # moment d'inertie dans l'axe y
+    Ixx = 419/12    # coefficient du moment d'inertie dans l'axe x
+    Iyy = 131/12    # coefficient du moment d'inertie dans l'axe y
 
     coeffEuler = (np.pi*np.pi*E)/(L*L)
 
