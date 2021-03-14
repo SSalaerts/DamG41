@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time
 """
 Analyse cinématique et dynamique en vue de dimensionner la section d'une bielle.
 
@@ -17,7 +17,8 @@ D = 0.095          # diamètre du piston en mètres
 C = 0.115          # course du piston en mètres
 R = C/2            # longueur de la manivelle obtenue grâce à la longueur de la course
 beta = 3           # ratio entre la longueur de la bielle et la manivelle
-L = R*beta         # longueur de la bielle que l'on cherche à dimensionner
+L = beta*R         # TODO lequel garder ?
+L = 3*C/2          # longueur de la bielle que l'on cherche à dimensionner
 mpiston = 0.25     # masse du piston en kg
 mbielle = 0.35     # masse de la bielle en kg
 Q = 1650e3         # valeur chaleur emise par fuel par kg de melange admis (Diesel) en J
@@ -56,30 +57,32 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
             t: l'épaisseur critique en [m] de la bielle en forme de I
     """
 
+    """Détermination des constantes"""
+    size = theta.size
+    PI = np.pi
+    omega = rpm * 2 * PI / 60
+    p_admission = s * 1e5
+    Qtot = Q * (p_admission * Vc) / (287.1 * 303.15)
+    gamma = 1.3
+    beta = 3
+
     """Fonctions calculant le volume et sa dérivée par rapport à theta pour un angle theta donné"""
     V_theta = lambda theta: (Vc/2) * (1 - np.cos(theta) + beta - np.sqrt(beta*beta - np.sin(theta)**2)) + Vc/(tau-1)
     dVdtheta = lambda theta: (Vc/2) * (np.sin(theta) + (np.sin(theta)*np.cos(theta))/np.sqrt(beta*beta - np.sin(theta)**2))
 
     """Passage de degré en radian pour tous les paramètres le nécessitant"""
-    DegtoRad = 2*np.pi/360
+    DegtoRad = 2*PI/360
     thetaRadian = theta*DegtoRad
     thetaCRadian = thetaC*DegtoRad
     deltaThetaCRadian = deltaThetaC*DegtoRad
-
-    """Détermination des constantes"""
-    size = theta.size
-    omega = rpm*2*np.pi/60
-    p_admission = s*1e5
-    Qtot = Q * (p_admission * Vc) / (287.1 * 303.15)
-    gamma = 1.3
 
     """Calcul de V_output et de la variation de volume par rapport à theta"""
     V_output = V_theta(thetaRadian)
     dV = dVdtheta(thetaRadian)
 
     """Fonction calculant l'apport de chaleur par rapport à theta"""
-    dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * np.pi) * np.sin(
-        np.pi * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
+    dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * PI) * np.sin(
+        PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
 
     Q_output = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
     Q_output[:180 - thetaC] = 0                          # Apport de chaleur uniquement entre thetaC et thetaC + deltaThetaC
@@ -93,7 +96,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
         p_output[i + 1] = p_output[i] + DegtoRad*dPdtheta(i)
 
     """Calcul de F_pied_output et F_tete_output"""
-    F_pression = (np.pi*D*D/4)*p_output
+    F_pression = (PI*D*D/4)*p_output
     acceleration = R*omega*omega*np.cos(thetaRadian)
     F_pied_output = F_pression - mpiston*acceleration
     F_tete_output = -F_pression + (mpiston + mbielle)*acceleration
@@ -110,7 +113,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     Ixx = 419/12    # coefficient du moment d'inertie dans l'axe x
     Iyy = 131/12    # coefficient du moment d'inertie dans l'axe y
 
-    coeffEuler = (np.pi*np.pi*E)/(L*L)
+    coeffEuler = (PI*PI*E)/(L*L)
 
     ax = coeffEuler*Ixx/(Fcrit*Kx*Kx)
     bx = -coeffEuler*Ixx/(11*sigma*Kx*Kx)
@@ -131,7 +134,11 @@ theta = np.arange(-180, 181)
 thetaC = 35
 deltaThetaC = 41
 
+
+t1 = time.perf_counter()
 V_output, Q_output, F_pied_output, F_tete_output, p_output, t = myfunc(rpm, s, theta, thetaC, deltaThetaC)
+t2 = time.perf_counter()
+print("time taken =", t2-t1, "[s]")
 
 
 def beauxPlots():
