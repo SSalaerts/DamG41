@@ -15,9 +15,7 @@ La longueur de la bielle n'étant pas référencée, nous avons décidé d'un ra
 tau = 18           # taux de compression
 D = 0.095          # diamètre du piston en mètres
 C = 0.115          # course du piston en mètres
-R = C/2            # longueur de la manivelle obtenue grâce à la longueur de la course
-beta = 3           # ratio entre la longueur de la bielle et la manivelle
-L = beta*R         # TODO lequel garder ?
+R = C/2            # longueur de la manivelle en [m]
 L = 3*C/2          # longueur de la bielle que l'on cherche à dimensionner
 mpiston = 0.25     # masse du piston en kg
 mbielle = 0.35     # masse de la bielle en kg
@@ -57,7 +55,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
             t: l'épaisseur critique en [m] de la bielle en forme de I
     """
 
-    """Détermination des constantes"""
+    #=== Détermination des constantes ===#
     size = theta.size
     PI = np.pi
     omega = rpm * 2 * PI / 60
@@ -66,46 +64,50 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     gamma = 1.3
     beta = 3
 
-    """Fonctions calculant le volume et sa dérivée par rapport à theta pour un angle theta donné"""
+    #=== Fonctions calculant le volume et sa dérivée par rapport à theta pour un angle theta donné ===#
     V_theta = lambda theta: (Vc/2) * (1 - np.cos(theta) + beta - np.sqrt(beta*beta - np.sin(theta)**2)) + Vc/(tau-1)
     dVdtheta = lambda theta: (Vc/2) * (np.sin(theta) + (np.sin(theta)*np.cos(theta))/np.sqrt(beta*beta - np.sin(theta)**2))
 
-    """Passage de degré en radian pour tous les paramètres le nécessitant"""
-    DegtoRad = 2*PI/360
+    #=== Passage de degré en radian pour tous les paramètres le nécessitant ===#
+    DegtoRad = PI/180
     thetaRadian = theta*DegtoRad
     thetaCRadian = thetaC*DegtoRad
     deltaThetaCRadian = deltaThetaC*DegtoRad
 
-    """Calcul de V_output et de la variation de volume par rapport à theta"""
+    #=== Calcul de V_output et de la variation de volume par rapport à theta ===#
     V_output = V_theta(thetaRadian)
     dV = dVdtheta(thetaRadian)
 
-    """Fonction calculant l'apport de chaleur par rapport à theta"""
+    #=== Fonction calculant l'apport de chaleur par rapport à theta ===#
     dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * PI) * np.sin(
         PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
 
     Q_output = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
-    Q_output[:180 - thetaC] = 0                          # Apport de chaleur uniquement entre thetaC et thetaC + deltaThetaC
-    Q_output[180 - thetaC + deltaThetaC:] = 0
+    indexThetaC = np.where(theta == -thetaC)[0][0]
+    indexDeltaThetaC = np.where(theta == -thetaC + deltaThetaC)[0][0]
+    Q_output[:indexThetaC] = 0
+    Q_output[indexDeltaThetaC:] = 0
 
-    """Calcul de p par Euler explicite"""
+    #=== Calcul de p par Euler explicite ===#
     p_output = np.zeros(size)
     dPdtheta = lambda i: (-gamma * p_output[i] * dV[i] + (gamma - 1) * Q_output[i])/V_output[i]
     p_output[0] = p_admission
-    for i in range(size - 1):
-        p_output[i + 1] = p_output[i] + DegtoRad*dPdtheta(i)
+    h = (theta[-1] - theta[0])/(size-1)
 
-    """Calcul de F_pied_output et F_tete_output"""
+    for i in range(size - 1):
+        p_output[i + 1] = p_output[i] + h*DegtoRad*dPdtheta(i)
+
+    #=== Calcul de F_pied_output et F_tete_output ===#
     F_pression = (PI*D*D/4)*p_output
     acceleration = R*omega*omega*np.cos(thetaRadian)
     F_pied_output = F_pression - mpiston*acceleration
     F_tete_output = -F_pression + (mpiston + mbielle)*acceleration
 
-    """Détermination de la force critique"""
+    #=== Détermination de la force critique ===#
     Fcompression = np.minimum(-F_tete_output, F_pied_output)
     Fcrit = np.max(Fcompression)
 
-    """Calcul de t"""
+    #=== Calcul de t ===#
     sigma = 450e6   # résistance de compression à 450 MPa
     E = 200e9       # module d'élasticité à 200 GPa
     Kx = 1          # facteur de correction dans le plan du mouvement (axe x)
@@ -130,9 +132,9 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 
 rpm = 1500
 s = 1.8
-theta = np.arange(-180, 181)
-thetaC = 35
-deltaThetaC = 41
+theta = np.linspace(-180, 180, 1441)
+thetaC = 35.5
+deltaThetaC = 41.5
 
 
 t1 = time.perf_counter()
