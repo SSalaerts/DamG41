@@ -83,10 +83,14 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
         PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
 
     Q_output = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
-    indexThetaC = np.where(theta == -thetaC)[0][0]
-    indexDeltaThetaC = np.where(theta == -thetaC + deltaThetaC)[0][0]
-    Q_output[:indexThetaC] = 0
-    Q_output[indexDeltaThetaC:] = 0
+    # indexThetaC = np.where(theta == -thetaC)[0][0]
+    # indexDeltaThetaC = np.where(theta == -thetaC + deltaThetaC)[0][0]
+    # Q_output[:indexThetaC] = 0
+    # Q_output[indexDeltaThetaC:] = 0
+
+    for i in range(size):
+        if theta[i] < -thetaC or theta[i] > -thetaC + deltaThetaC:
+            Q_output[i] = 0
 
     #=== Calcul de p par Euler explicite ===#
     p_output = np.zeros(size)
