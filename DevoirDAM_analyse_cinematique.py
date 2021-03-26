@@ -12,15 +12,17 @@ La longueur de la bielle n'étant pas référencée, nous avons décidé d'un ra
 
 # Grandeurs géométriques
 
-tau = 18           # taux de compression
-D = 0.095          # diamètre du piston en mètres
-C = 0.115          # course du piston en mètres
-R = C/2            # longueur de la manivelle en [m]
-L = 3*C/2          # longueur de la bielle que l'on cherche à dimensionner
-mpiston = 0.25     # masse du piston en kg
-mbielle = 0.35     # masse de la bielle en kg
-Q = 1650e3         # valeur chaleur emise par fuel par kg de melange admis (Diesel) en J
-Vc = 3.3e-3/4      # cylindrée d'un piston
+tau = 18 #[-]
+D = 0.095 #[m]
+C = 0.115 #[m]
+R = C/2 #[m] longueur de la manivelle
+beta = 3 #[-] ratio entre la longueur de la bielle et celle de la manivelle
+L = beta*R #[m] longueur de la bielle
+print(L)
+mpiston = 0.25 #[kg]
+mbielle = 0.35 #[kg]
+Q = 1650e3 #[J/kg_inlet gas]
+Vc = 3.3e-3/4 #[m^3] cylindrée d'un piston
 
 
 def myfunc(rpm, s, theta, thetaC, deltaThetaC):
@@ -79,8 +81,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     dV = dVdtheta(thetaRadian)
 
     #=== Fonction calculant l'apport de chaleur par rapport à theta ===#
-    dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * PI) * np.sin(
-        PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
+    dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * PI) * np.sin(PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
 
     Q_output = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
 
@@ -130,12 +131,11 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     return (V_output, Q_output, F_pied_output, F_tete_output, p_output, t)
 
 
-rpm = 1500
-s = 1.8
-theta = np.linspace(-180, 180, 1441)
-print(theta)
-thetaC = 35.5
-deltaThetaC = 41.5
+rpm = 4467
+s = 0.8
+theta = np.linspace(-180, 180, 1001)
+thetaC = 40.0
+deltaThetaC = 58.0
 
 
 t1 = time.perf_counter()
@@ -145,6 +145,19 @@ print("time taken =", t2-t1, "[s]")
 
 
 def beauxPlots():
+
+
+    print(V_output)
+
+    print(Q_output)
+
+    print(F_pied_output)
+
+    print(F_tete_output)
+
+    print(p_output)
+
+    print(t)
 
     plt.figure()
     plt.plot(theta, V_output)
@@ -170,3 +183,4 @@ def beauxPlots():
 
 
 beauxPlots()
+
