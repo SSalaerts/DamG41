@@ -83,10 +83,6 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
         PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
 
     Q_output = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
-    # indexThetaC = np.where(theta == -thetaC)[0][0]
-    # indexDeltaThetaC = np.where(theta == -thetaC + deltaThetaC)[0][0]
-    # Q_output[:indexThetaC] = 0
-    # Q_output[indexDeltaThetaC:] = 0
 
     for i in range(size):
         if theta[i] < -thetaC or theta[i] > -thetaC + deltaThetaC:
@@ -137,6 +133,7 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 rpm = 1500
 s = 1.8
 theta = np.linspace(-180, 180, 1441)
+print(theta)
 thetaC = 35.5
 deltaThetaC = 41.5
 
