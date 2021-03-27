@@ -22,8 +22,6 @@ mpiston = 0.25  # [kg]
 mbielle = 0.35  # [kg]
 Q = 1650e3  # [J/kg_inlet gas]
 Vc = 3.3e-3/4  # [m^3] cylindrée d'un piston
-print(Vc)
-
 
 # D = 0.1 #diamètre piston [m]
 # L = 0.15 #longueur bielle [m]
@@ -78,9 +76,6 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     gamma = 1.3
     beta = 3
 
-    #=== Fonctions calculant le volume et sa dérivée par rapport à theta pour un angle theta donné ===#
-    V_theta = lambda theta: (Vc/2) * (1 - np.cos(theta) + beta - np.sqrt(beta*beta - np.sin(theta)**2)) + Vc/(tau-1)
-    dVdtheta = lambda theta: (Vc/2) * (np.sin(theta) + (np.sin(theta)*np.cos(theta))/np.sqrt(beta*beta - np.sin(theta)**2))
 
     #=== Passage de degré en radian pour tous les paramètres le nécessitant ===#
     DegtoRad = PI/180
@@ -88,26 +83,27 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     thetaCRadian = thetaC*DegtoRad
     deltaThetaCRadian = deltaThetaC*DegtoRad
 
-    #=== Calcul de V_output et de la variation de volume par rapport à theta ===#
+    #=== Fonctions calculant le volume et sa dérivée par rapport à theta pour un angle theta donné ===#
+    V_theta = lambda theta: (Vc/2) * (1 - np.cos(theta) + beta - np.sqrt(beta*beta - np.sin(theta)**2)) + Vc/(tau-1)
+    dVdtheta = lambda theta: (Vc/2) * (np.sin(theta) + (np.sin(theta)*np.cos(theta))/np.sqrt(beta*beta - np.sin(theta)**2))
     V_output = V_theta(thetaRadian)
     dV = dVdtheta(thetaRadian)
 
-    #=== Fonction calculant l'apport de chaleur par rapport à theta ===#
+    #=== Fonction calculant l'apport de chaleur et sa dérivée par rapport à theta ===#
     dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * PI) * np.sin(PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
     Q_theta = lambda theta, thetaC, deltaThetaC: (Qtot/2)*(1 - np.cos(PI*(theta - thetaC)/deltaThetaC))
     dQ = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
     Q_output = Q_theta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
 
-    count = 0
     for i in range(size):
         if theta[i] < -thetaC or theta[i] > -thetaC + deltaThetaC:
             dQ[i] = 0
             Q_output[i] = 0
 
         if theta[i] > -thetaC + deltaThetaC:
-            count += 1
             dQ[i] = 0
-            Q_output[i] = Q_output[i - count]
+            Q_output[i] = Qtot
+
 
     #=== Calcul de p par Euler explicite ===#
     p_output = np.zeros(size)
