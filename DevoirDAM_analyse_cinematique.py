@@ -147,11 +147,11 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     return (V_output, Q_output, F_pied_output, F_tete_output, p_output, t)
 
 
-rpm = 4467
-s = 0.8
+rpm = 3254
+s = 1.6
 theta = np.linspace(-180, 180, 1001)
-thetaC = 40.0
-deltaThetaC = 58.0
+thetaC = 18.0
+deltaThetaC = 50.0
 
 
 t1 = time.perf_counter()
