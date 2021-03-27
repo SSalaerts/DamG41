@@ -12,17 +12,29 @@ La longueur de la bielle n'étant pas référencée, nous avons décidé d'un ra
 
 # Grandeurs géométriques
 
-tau = 18 #[-]
-D = 0.095 #[m]
-C = 0.115 #[m]
-R = C/2 #[m] longueur de la manivelle
-beta = 3 #[-] ratio entre la longueur de la bielle et celle de la manivelle
-L = beta*R #[m] longueur de la bielle
-print(L)
-mpiston = 0.25 #[kg]
-mbielle = 0.35 #[kg]
-Q = 1650e3 #[J/kg_inlet gas]
-Vc = 3.3e-3/4 #[m^3] cylindrée d'un piston
+tau = 18  # [-]
+D = 0.095  # [m]
+C = 0.115  # [m]
+R = C/2  # [m] longueur de la manivelle
+beta = 3  # [-] ratio entre la longueur de la bielle et celle de la manivelle
+L = beta*R  # [m] longueur de la bielle
+mpiston = 0.25  # [kg]
+mbielle = 0.35  # [kg]
+Q = 1650e3  # [J/kg_inlet gas]
+Vc = 3.3e-3/4  # [m^3] cylindrée d'un piston
+print(Vc)
+
+
+# D = 0.1 #diamètre piston [m]
+# L = 0.15 #longueur bielle [m]
+# tau = 20#taux de compression [-]
+# C = 0.1 #longueur course [m]
+# R = C/2
+# mpiston = 0.25#valeur masse piston [kg]
+# mbielle = 0.35 #masse bielle [kg]
+# Q = 1650000 #[J/kg_inlet gas]
+# Vc = (np.pi*D**2)/4*C
+# print(Vc)
 
 
 def myfunc(rpm, s, theta, thetaC, deltaThetaC):
@@ -82,16 +94,24 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 
     #=== Fonction calculant l'apport de chaleur par rapport à theta ===#
     dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * PI) * np.sin(PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
+    Q_theta = lambda theta, thetaC, deltaThetaC: (Qtot/2)*(1 - np.cos(PI*(theta - thetaC)/deltaThetaC))
+    dQ = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
+    Q_output = Q_theta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
 
-    Q_output = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
-
+    count = 0
     for i in range(size):
         if theta[i] < -thetaC or theta[i] > -thetaC + deltaThetaC:
+            dQ[i] = 0
             Q_output[i] = 0
+
+        if theta[i] > -thetaC + deltaThetaC:
+            count += 1
+            dQ[i] = 0
+            Q_output[i] = Q_output[i - count]
 
     #=== Calcul de p par Euler explicite ===#
     p_output = np.zeros(size)
-    dPdtheta = lambda i: (-gamma * p_output[i] * dV[i] + (gamma - 1) * Q_output[i])/V_output[i]
+    dPdtheta = lambda i: (-gamma * p_output[i] * dV[i] + (gamma - 1) * dQ[i])/V_output[i]
     p_output[0] = p_admission
     h = (theta[-1] - theta[0])/(size-1)
 
@@ -146,18 +166,17 @@ print("time taken =", t2-t1, "[s]")
 
 def beauxPlots():
 
-
-    print(V_output)
-
-    print(Q_output)
-
-    print(F_pied_output)
-
-    print(F_tete_output)
-
-    print(p_output)
-
-    print(t)
+    # print(V_output)
+    #
+    # print(Q_output)
+    #
+    # print(F_pied_output)
+    #
+    # print(F_tete_output)
+    #
+    # print(p_output)
+    #
+    # print(t)
 
     plt.figure()
     plt.plot(theta, V_output)
@@ -165,7 +184,7 @@ def beauxPlots():
 
     plt.figure()
     plt.plot(theta, Q_output)
-    plt.title("Ajout de chaleur par rapport a theta en [J]")
+    plt.title("Apport de chaleur par rapport a theta en [J]")
 
     plt.figure()
     plt.plot(theta, F_pied_output, label="F_pied")
