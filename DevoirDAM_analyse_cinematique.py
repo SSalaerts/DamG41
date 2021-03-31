@@ -21,18 +21,6 @@ L = beta*R  # [m] longueur de la bielle
 mpiston = 0.25  # [kg]
 mbielle = 0.35  # [kg]
 Q = 1650e3  # [J/kg_inlet gas]
-Vc = 3.3e-3/4  # [m^3] cylindrée d'un piston
-
-# D = 0.1 #diamètre piston [m]
-# L = 0.15 #longueur bielle [m]
-# tau = 20#taux de compression [-]
-# C = 0.1 #longueur course [m]
-# R = C/2
-# mpiston = 0.25#valeur masse piston [kg]
-# mbielle = 0.35 #masse bielle [kg]
-# Q = 1650000 #[J/kg_inlet gas]
-# Vc = (np.pi*D**2)/4*C
-# print(Vc)
 
 
 def myfunc(rpm, s, theta, thetaC, deltaThetaC):
@@ -72,10 +60,10 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     PI = np.pi
     omega = rpm * 2 * PI / 60
     p_admission = s * 1e5
+    Vc = PI*D*D*R/2
     Qtot = Q * (p_admission * Vc) / (287.1 * 303.15)
     gamma = 1.3
     beta = 3
-
 
     #=== Passage de degré en radian pour tous les paramètres le nécessitant ===#
     DegtoRad = PI/180
@@ -99,11 +87,6 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
         if theta[i] < -thetaC or theta[i] > -thetaC + deltaThetaC:
             dQ[i] = 0
             Q_output[i] = 0
-
-        if theta[i] > -thetaC + deltaThetaC:
-            dQ[i] = 0
-            Q_output[i] = Qtot
-
 
     #=== Calcul de p par Euler explicite ===#
     p_output = np.zeros(size)
@@ -150,8 +133,8 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
 rpm = 3254
 s = 1.6
 theta = np.linspace(-180, 180, 1001)
-thetaC = 18.0
-deltaThetaC = 50.0
+thetaC = 30.0
+deltaThetaC = 40.0
 
 
 t1 = time.perf_counter()
