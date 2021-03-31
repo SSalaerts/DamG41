@@ -63,7 +63,6 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     Vc = PI*D*D*R/2
     Qtot = Q * (p_admission * Vc) / (287.1 * 303.15)
     gamma = 1.3
-    beta = 3
 
     #=== Passage de degré en radian pour tous les paramètres le nécessitant ===#
     DegtoRad = PI/180
@@ -78,10 +77,10 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     dV = dVdtheta(thetaRadian)
 
     #=== Fonction calculant l'apport de chaleur et sa dérivée par rapport à theta ===#
-    dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * PI) * np.sin(PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
     Q_theta = lambda theta, thetaC, deltaThetaC: (Qtot/2)*(1 - np.cos(PI*(theta - thetaC)/deltaThetaC))
-    dQ = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
+    dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * PI) * np.sin(PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
     Q_output = Q_theta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
+    dQ = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
 
     for i in range(size):
         if theta[i] < -thetaC or theta[i] > -thetaC + deltaThetaC:
