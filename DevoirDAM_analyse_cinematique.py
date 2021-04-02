@@ -71,16 +71,23 @@ def myfunc(rpm, s, theta, thetaC, deltaThetaC):
     deltaThetaCRadian = deltaThetaC*DegtoRad
 
     #=== Fonctions calculant le volume et sa dérivée par rapport à theta pour un angle theta donné ===#
-    V_theta = lambda theta: (Vc/2) * (1 - np.cos(theta) + beta - np.sqrt(beta*beta - np.sin(theta)**2)) + Vc/(tau-1)
-    dVdtheta = lambda theta: (Vc/2) * (np.sin(theta) + (np.sin(theta)*np.cos(theta))/np.sqrt(beta*beta - np.sin(theta)**2))
-    V_output = V_theta(thetaRadian)
-    dV = dVdtheta(thetaRadian)
+    # V_theta = lambda theta: (Vc/2) * (1 - np.cos(theta) + beta - np.sqrt(beta*beta - np.sin(theta)**2)) + Vc/(tau-1)
+    # dVdtheta = lambda theta: (Vc/2) * (np.sin(theta) + (np.sin(theta)*np.cos(theta))/np.sqrt(beta*beta - np.sin(theta)**2))
+    #
+    # V_output = V_theta(thetaRadian)
+    # dV = dVdtheta(thetaRadian)
+
+    V_output = (Vc/2) * (1 - np.cos(thetaRadian) + beta - np.sqrt(beta*beta - np.sin(thetaRadian)**2)) + Vc/(tau-1)
+    dV = (Vc/2) * (np.sin(thetaRadian) + (np.sin(thetaRadian)*np.cos(thetaRadian))/np.sqrt(beta*beta - np.sin(thetaRadian)**2))
 
     #=== Fonction calculant l'apport de chaleur et sa dérivée par rapport à theta ===#
-    Q_theta = lambda theta, thetaC, deltaThetaC: (Qtot/2)*(1 - np.cos(PI*(theta - thetaC)/deltaThetaC))
-    dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * PI) * np.sin(PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
-    Q_output = Q_theta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
-    dQ = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
+    # Q_theta = lambda theta, thetaC, deltaThetaC: (Qtot/2)*(1 - np.cos(PI*(theta - thetaC)/deltaThetaC))
+    # dQdtheta = lambda theta, thetaC, deltaThetaC: (Qtot * PI) * np.sin(PI * (theta - thetaC) / deltaThetaC) / (2 * deltaThetaC)
+    # Q_output = Q_theta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
+    # dQ = dQdtheta(thetaRadian, -thetaCRadian, deltaThetaCRadian)
+
+    Q_output = (Qtot/2)*(1 - np.cos(PI*(thetaRadian + thetaCRadian)/deltaThetaCRadian))
+    dQ = (Qtot * PI) * np.sin(PI * (thetaRadian + thetaCRadian) / deltaThetaCRadian) / (2 * deltaThetaCRadian)
 
     for i in range(size):
         if theta[i] < -thetaC or theta[i] > -thetaC + deltaThetaC:
